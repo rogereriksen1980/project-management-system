@@ -8,18 +8,21 @@ const ProjectSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
   },
   client: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
   },
   startDate: {
     type: Date,
     required: true
   },
   endDate: {
-    type: Date
+    type: Date,
+    default: null
   },
   status: {
     type: String,
@@ -33,7 +36,8 @@ const ProjectSchema = new mongoose.Schema({
     },
     role: {
       type: String,
-      trim: true
+      trim: true,
+      default: ''
     }
   }],
   projectManager: {
