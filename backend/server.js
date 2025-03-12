@@ -85,14 +85,18 @@ mongoose.connect(config.mongoURI, {
   useUnifiedTopology: true
 })
 .then(() => {
-  console.log('MongoDB Connected Successfully');
-  console.log('MongoDB Connection String:', config.mongoURI.replace(/mongodb\+srv:\/\/([^:]+):[^@]+@/, 'mongodb+srv://$1:****@'));
+  console.log('MongoDB Connected');
   
   // Start server
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Server address: ${server.address().address}:${server.address().port}`);
+  });
 })
 .catch(err => {
   console.error('MongoDB connection error:', err);
   process.exit(1);
+});
 });
