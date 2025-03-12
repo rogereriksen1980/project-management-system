@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -27,10 +28,29 @@ app.use('/api/tasks', taskRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'public')));
+  // Serve from multiple possible locations
+  const fs = require('fs');
   
+  // Try serving from backend/public first (our copied build files)
+  if (fs.existsSync(path.join(__dirname, 'public', 'index.html'))) {
+    console.log('Serving static files from backend/public');
+    app.use(express.static(path.join(__dirname, 'public')));
+  } 
+  // Then try frontend/build
+  else if (fs.existsSync(path.join(__dirname, '../frontend/build', 'index.html'))) {
+    console.log('Serving static files from frontend/build');
+    app.use(express.static(path.join(__dirname, '../frontend/build')));
+  }
+  
+  // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+    if (fs.existsSync(path.join(__dirname, 'public', 'index.html'))) {
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } else if (fs.existsSync(path.join(__dirname, '../frontend/build', 'index.html'))) {
+      res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+    } else {
+      res.status(404).send('No frontend build found');
+    }
   });
 }
 
