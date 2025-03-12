@@ -119,33 +119,31 @@ const ProjectDetail = () => {
     setSelectedMembers(selectedMembers.filter(member => member.memberId !== memberId));
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   setError(null);
   setSuccessMessage(null);
 
   try {
-    console.log('Submitting project data:', project);
-    
-    // Format the project data for API
+    // Create a minimal project object with only the essential fields
     const projectData = {
-      ...project,
-      members: selectedMembers.map(member => ({
-        memberId: member.memberId,
-        role: member.role || ''
-      }))
+      name: project.name,
+      description: project.description || '',
+      client: project.client || '',
+      startDate: project.startDate,
+      status: project.status || 'planning'
     };
     
-    console.log('Formatted project data for API:', projectData);
+    console.log('Submitting simplified project data:', projectData);
 
     let response;
     if (isNewProject) {
       response = await api.post('/api/projects', projectData);
-      console.log('Project created response:', response.data);
+      console.log('Project created successfully:', response.data);
       setSuccessMessage('Project created successfully!');
     } else {
       response = await api.put(`/api/projects/${id}`, projectData);
-      console.log('Project updated response:', response.data);
+      console.log('Project updated successfully:', response.data);
       setSuccessMessage('Project updated successfully!');
     }
 
@@ -154,11 +152,14 @@ const ProjectDetail = () => {
       navigate(`/projects/${response.data._id}`);
     }, 1500);
   } catch (err) {
-    console.error('Error saving project:', err.response?.data || err.message);
-    setError(
-      err.response?.data?.message || 
-      'Error saving project. Please check your inputs and try again.'
-    );
+    console.error('Error saving project:', err);
+    
+    const errorMessage = err.response?.data?.message || 
+                        err.response?.data?.error || 
+                        err.message || 
+                        'Unknown error occurred';
+                        
+    setError(`Error: ${errorMessage}`);
   }
 };
 
