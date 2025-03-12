@@ -26,6 +26,18 @@ app.use('/api/members', memberRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/tasks', taskRoutes);
 
+
+try {
+  app.use('/api/auth', authRoutes);
+  app.use('/api/projects', projectRoutes);
+  app.use('/api/members', memberRoutes);
+  app.use('/api/meetings', meetingRoutes);
+  app.use('/api/tasks', taskRoutes);
+  app.use('/api/reports', reportRoutes);
+} catch (err) {
+  console.error('Error setting up routes:', err.message);
+}
+
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   // Serve from multiple possible locations
