@@ -62,22 +62,35 @@ exports.createProject = async (req, res) => {
       projectManager 
     } = req.body;
     
+    console.log('Creating project with data:', req.body);
+    
+    // Validation
+    if (!name) {
+      return res.status(400).json({ message: 'Project name is required' });
+    }
+    
+    if (!startDate) {
+      return res.status(400).json({ message: 'Start date is required' });
+    }
+    
     // Create project
     const project = new Project({
       name,
-      description,
-      client,
+      description: description || '',
+      client: client || '',
       startDate,
-      endDate,
+      endDate: endDate || null,
       status: status || 'planning',
       members: members || [],
       projectManager: projectManager || req.user.id
     });
     
     await project.save();
+    console.log('Project created successfully:', project._id);
     
     // Add project to members' projects array
     if (members && members.length > 0) {
+      console.log('Adding project to member profiles:', members.length);
       for (const member of members) {
         await Member.findByIdAndUpdate(
           member.memberId,
@@ -88,6 +101,7 @@ exports.createProject = async (req, res) => {
     
     // Add project to project manager's projects array
     if (projectManager) {
+      console.log('Adding project to project manager profile:', projectManager);
       await Member.findByIdAndUpdate(
         projectManager,
         { $addToSet: { projects: project._id } }
@@ -96,8 +110,11 @@ exports.createProject = async (req, res) => {
     
     res.status(201).json(project);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error creating project:', err);
+    res.status(500).json({ 
+      message: 'Server error creating project', 
+      error: err.message 
+    });
   }
 };
 
