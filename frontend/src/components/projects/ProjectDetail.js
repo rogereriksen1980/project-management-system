@@ -120,37 +120,47 @@ const ProjectDetail = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setSuccessMessage(null);
+  e.preventDefault();
+  setError(null);
+  setSuccessMessage(null);
 
-    try {
-      const projectData = {
-        ...project,
-        members: selectedMembers.map(member => ({
-          memberId: member.memberId,
-          role: member.role
-        }))
-      };
+  try {
+    console.log('Submitting project data:', project);
+    
+    // Format the project data for API
+    const projectData = {
+      ...project,
+      members: selectedMembers.map(member => ({
+        memberId: member.memberId,
+        role: member.role || ''
+      }))
+    };
+    
+    console.log('Formatted project data for API:', projectData);
 
-      let response;
-      if (isNewProject) {
-        response = await api.post('/api/projects', projectData);
-        setSuccessMessage('Project created successfully!');
-      } else {
-        response = await api.put(`/api/projects/${id}`, projectData);
-        setSuccessMessage('Project updated successfully!');
-      }
-
-      // Redirect after a brief delay to show success message
-      setTimeout(() => {
-        navigate(`/projects/${response.data._id}`);
-      }, 1500);
-    } catch (err) {
-      setError('Error saving project. Please check your inputs and try again.');
-      console.error('Error saving project:', err);
+    let response;
+    if (isNewProject) {
+      response = await api.post('/api/projects', projectData);
+      console.log('Project created response:', response.data);
+      setSuccessMessage('Project created successfully!');
+    } else {
+      response = await api.put(`/api/projects/${id}`, projectData);
+      console.log('Project updated response:', response.data);
+      setSuccessMessage('Project updated successfully!');
     }
-  };
+
+    // Redirect after a brief delay to show success message
+    setTimeout(() => {
+      navigate(`/projects/${response.data._id}`);
+    }, 1500);
+  } catch (err) {
+    console.error('Error saving project:', err.response?.data || err.message);
+    setError(
+      err.response?.data?.message || 
+      'Error saving project. Please check your inputs and try again.'
+    );
+  }
+};
 
   const handleDeleteProject = async () => {
     if (!window.confirm('Are you sure you want to delete this project? This cannot be undone.')) {
