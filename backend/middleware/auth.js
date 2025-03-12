@@ -10,12 +10,18 @@ module.exports = function(req, res, next) {
     return res.status(401).json({ message: 'No token, authorization denied' });
   }
 
-  // Verify token
   try {
+    // Verify token
     const decoded = jwt.verify(token, config.jwtSecret);
+    
+    // Log successful token verification
+    console.log('Token verified successfully:', decoded.user.id);
+    
+    // Add user data to request
     req.user = decoded.user;
     next();
   } catch (err) {
-    res.status(401).json({ message: 'Token is not valid' });
+    console.error('Token verification failed:', err.message);
+    return res.status(401).json({ message: 'Token is not valid' });
   }
 };
