@@ -11,7 +11,7 @@ const projectRoutes = require('./routes/projectRoutes');
 const memberRoutes = require('./routes/memberRoutes');
 const meetingRoutes = require('./routes/meetingRoutes');
 const taskRoutes = require('./routes/taskRoutes');
-
+const reportRoutes = require('./routes/reportRoutes');
 const app = express();
 
 // Middleware
