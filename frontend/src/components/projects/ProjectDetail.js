@@ -215,209 +215,111 @@ const ProjectDetail = () => {
 
       <div className="bg-white p-6 rounded-lg shadow mb-8">
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="name">
-                Project Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={project.name}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-                required
-              />
-            </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div>
+      <label className="block text-gray-700 mb-2" htmlFor="name">
+        Project Name *
+      </label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        value={project.name}
+        onChange={handleChange}
+        className="w-full px-3 py-2 border border-gray-300 rounded"
+        required
+      />
+    </div>
 
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="client">
-                Client
-              </label>
-              <input
-                type="text"
-                id="client"
-                name="client"
-                value={project.client}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-              />
-            </div>
+    <div>
+      <label className="block text-gray-700 mb-2" htmlFor="client">
+        Client
+      </label>
+      <input
+        type="text"
+        id="client"
+        name="client"
+        value={project.client}
+        onChange={handleChange}
+        className="w-full px-3 py-2 border border-gray-300 rounded"
+      />
+    </div>
 
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="startDate">
-                Start Date *
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={project.startDate}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-                required
-              />
-            </div>
+    <div>
+      <label className="block text-gray-700 mb-2" htmlFor="startDate">
+        Start Date *
+      </label>
+      <input
+        type="date"
+        id="startDate"
+        name="startDate"
+        value={project.startDate}
+        onChange={handleChange}
+        className="w-full px-3 py-2 border border-gray-300 rounded"
+        required
+      />
+    </div>
 
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="endDate">
-                End Date
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={project.endDate}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-              />
-            </div>
+    <div>
+      <label className="block text-gray-700 mb-2" htmlFor="status">
+        Status *
+      </label>
+      <select
+        id="status"
+        name="status"
+        value={project.status}
+        onChange={handleChange}
+        className="w-full px-3 py-2 border border-gray-300 rounded"
+        required
+      >
+        <option value="planning">Planning</option>
+        <option value="active">Active</option>
+        <option value="on-hold">On Hold</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
+  </div>
 
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="status">
-                Status *
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={project.status}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-                required
-              >
-                <option value="planning">Planning</option>
-                <option value="active">Active</option>
-                <option value="on-hold">On Hold</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
+  <div className="mb-6">
+    <label className="block text-gray-700 mb-2" htmlFor="description">
+      Description
+    </label>
+    <textarea
+      id="description"
+      name="description"
+      value={project.description}
+      onChange={handleChange}
+      className="w-full px-3 py-2 border border-gray-300 rounded"
+      rows="4"
+    ></textarea>
+  </div>
 
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="projectManager">
-                Project Manager *
-              </label>
-              <select
-                id="projectManager"
-                name="projectManager"
-                value={project.projectManager}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded"
-                required
-                disabled={auth.user?.role !== 'admin'}
-              >
-                <option value="">Select Project Manager</option>
-                {availableMembers
-                  .filter(member => member.role === 'admin' || member.role === 'project_manager')
-                  .map(member => (
-                    <option key={member._id} value={member._id}>
-                      {member.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2" htmlFor="description">
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={project.description}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded"
-              rows="4"
-            ></textarea>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Project Members</label>
-            
-            <div className="flex items-center mb-4">
-              <select
-                className="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded mr-2"
-                onChange={handleMemberSelect}
-                defaultValue=""
-              >
-                <option value="">Add Member to Project</option>
-                {availableMembers.map(member => (
-                  <option key={member._id} value={member._id}>
-                    {member.name} ({member.role})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {selectedMembers.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-4 py-2 text-left">Name</th>
-                      <th className="px-4 py-2 text-left">Role in Project</th>
-                      <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedMembers.map(member => (
-                      <tr key={member.memberId} className="border-t">
-                        <td className="px-4 py-2">{member.name}</td>
-                        <td className="px-4 py-2">
-                          <input
-                            type="text"
-                            value={member.role}
-                            onChange={(e) => handleMemberRoleChange(member.memberId, e.target.value)}
-                            className="w-full px-3 py-1 border border-gray-300 rounded"
-                            placeholder="e.g. Developer, Designer"
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMember(member.memberId)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-gray-500 italic">No members added to this project yet.</p>
-            )}
-          </div>
-
-          <div className="flex justify-between">
-            <div>
-              <button
-                type="submit"
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded mr-2"
-              >
-                {isNewProject ? 'Create Project' : 'Save Changes'}
-              </button>
-              <Link
-                to="/projects"
-                className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded"
-              >
-                Cancel
-              </Link>
-            </div>
-            {!isNewProject && auth.user?.role === 'admin' && (
-              <button
-                type="button"
-                onClick={handleDeleteProject}
-                className="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded"
-              >
-                Delete Project
-              </button>
-            )}
-          </div>
-        </form>
+  <div className="flex justify-between">
+    <div>
+      <button
+        type="submit"
+        className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded mr-2"
+      >
+        {isNewProject ? 'Create Project' : 'Save Changes'}
+      </button>
+      <Link
+        to="/projects"
+        className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded"
+      >
+        Cancel
+      </Link>
+    </div>
+    {!isNewProject && auth.user?.role === 'admin' && (
+      <button
+        type="button"
+        onClick={handleDeleteProject}
+        className="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded"
+      >
+        Delete Project
+      </button>
+    )}
+  </div>
+</form>
       </div>
 
       {!isNewProject && (
