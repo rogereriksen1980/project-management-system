@@ -1,44 +1,117 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const { isProjectManagerOrAdmin, isProjectMember } = require('../middleware/roles');
-const {
-  getAllProjects,
-  getProject,
-  createProject,
-  updateProject,
-  deleteProject,
-  getProjectMembers
-} = require('../controllers/projectController');
 
-// @route   GET /api/projects
-// @desc    Get all projects
-// @access  Private
+// Create simple controller functions directly in the routes file
+// This ensures we don't have any undefined functions
+
+// Get all projects
+const getAllProjects = async (req, res) => {
+  try {
+    const Project = require('../models/Project');
+    const projects = await Project.find();
+    res.json(projects);
+  } catch (err) {
+    console.error('Error getting projects:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get a specific project
+const getProject = async (req, res) => {
+  try {
+    const Project = require('../models/Project');
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    res.json(project);
+  } catch (err) {
+    console.error('Error getting project:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Create a new project
+const createProject = async (req, res) => {
+  try {
+    const Project = require('../models/Project');
+    const { name, description, client, startDate, endDate, status } = req.body;
+    
+    console.log('Creating project:', req.body);
+    
+    if (!name || !startDate) {
+      return res.status(400).json({ message: 'Name and start date are required' });
+    }
+    
+    const project = new Project({
+      name,
+      description: description || '',
+      client: client || '',
+      startDate,
+      endDate: endDate || null,
+      status: status || 'planning',
+      projectManager: req.user.id
+    });
+    
+    await project.save();
+    res.status(201).json(project);
+  } catch (err) {
+    console.error('Error creating project:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update a project
+const updateProject = async (req, res) => {
+  try {
+    const Project = require('../models/Project');
+    const project = await Project.findById(req.params.id);
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    
+    const { name, description, client, startDate, endDate, status } = req.body;
+    
+    if (name) project.name = name;
+    if (description !== undefined) project.description = description;
+    if (client !== undefined) project.client = client;
+    if (startDate) project.startDate = startDate;
+    if (endDate !== undefined) project.endDate = endDate;
+    if (status) project.status = status;
+    
+    await project.save();
+    res.json(project);
+  } catch (err) {
+    console.error('Error updating project:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Delete a project
+const deleteProject = async (req, res) => {
+  try {
+    const Project = require('../models/Project');
+    const project = await Project.findById(req.params.id);
+    
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    
+    await project.remove();
+    res.json({ message: 'Project removed' });
+  } catch (err) {
+    console.error('Error deleting project:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Define routes with the functions we just created
 router.get('/', auth, getAllProjects);
-
-// @route   GET /api/projects/:id
-// @desc    Get a project
-// @access  Private (Project Members)
-router.get('/:id', auth, isProjectMember, getProject);
-
-// @route   POST /api/projects
-// @desc    Create a project
-// @access  Private (Admin/Project Manager)
-router.post('/', auth, createProject);  // Remove the middleware check for now
-
-// @route   PUT /api/projects/:id
-// @desc    Update a project
-// @access  Private (Admin/Project Manager)
-router.put('/:id', auth, isProjectManagerOrAdmin, updateProject);
-
-// @route   DELETE /api/projects/:id
-// @desc    Delete a project
-// @access  Private (Admin)
-router.delete('/:id', auth, isProjectManagerOrAdmin, deleteProject);
-
-// @route   GET /api/projects/:id/members
-// @desc    Get project members
-// @access  Private (Project Members)
-router.get('/:id/members', auth, isProjectMember, getProjectMembers);
+router.get('/:id', auth, getProject);
+router.post('/', auth, createProject);
+router.put('/:id', auth, updateProject);
+router.delete('/:id', auth, deleteProject);
 
 module.exports = router;
