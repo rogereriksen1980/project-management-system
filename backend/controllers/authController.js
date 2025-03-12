@@ -189,10 +189,18 @@ exports.resetPassword = async (req, res) => {
 // Get current user
 exports.getCurrentUser = async (req, res) => {
   try {
+    console.log('Getting current user with ID:', req.user.id);
     const member = await Member.findById(req.user.id).select('-password');
+    
+    if (!member) {
+      console.error('Member not found for ID:', req.user.id);
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    console.log('Current user found:', member.name);
     res.json(member);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching current user:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
