@@ -2,6 +2,7 @@ const fs = require('fs');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const debug = require('./middleware/debug'); // Add this line
 const path = require('path');
 const config = require('./config');
 
@@ -13,6 +14,9 @@ const meetingRoutes = require('./routes/meetingRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const app = express();
+
+// Debug middleware
+app.use(debug); // Add this line
 
 // Middleware
 app.use(cors());
@@ -37,6 +41,15 @@ try {
 } catch (err) {
   console.error('Error setting up routes:', err.message);
 }
+// Add error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ 
+    message: 'Server error', 
+    error: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message 
+  });
+});
+
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
