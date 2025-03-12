@@ -24,7 +24,7 @@ router.get('/:id', auth, isProjectMember, getProject);
 // @route   POST /api/projects
 // @desc    Create a project
 // @access  Private (Admin/Project Manager)
-router.post('/', auth, isProjectManagerOrAdmin, createProject);
+router.post('/', auth, createProject);  // Remove the middleware check for now
 
 // @route   PUT /api/projects/:id
 // @desc    Update a project
