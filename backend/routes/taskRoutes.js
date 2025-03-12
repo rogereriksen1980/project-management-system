@@ -1,43 +1,75 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const {
-  getAllTasks,
-  getMyTasks,
-  getTask,
-  updateTask,
-  addComment,
-  completeTaskByToken
-} = require('../controllers/taskController');
 
-// @route   GET /api/tasks
-// @desc    Get all tasks
-// @access  Private
-router.get('/', auth, getAllTasks);
+// Get all tasks
+router.get('/', auth, async (req, res) => {
+  try {
+    const Task = require('../models/Task');
+    const tasks = await Task.find();
+    res.json(tasks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
-// @route   GET /api/tasks/my-tasks
-// @desc    Get tasks for current user
-// @access  Private
-router.get('/my-tasks', auth, getMyTasks);
+// Get tasks for current user
+router.get('/my-tasks', auth, async (req, res) => {
+  try {
+    const Task = require('../models/Task');
+    const tasks = await Task.find({ 
+      responsibleMemberId: req.user.id,
+      status: { $ne: 'closed' }
+    });
+    res.json(tasks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
-// @route   GET /api/tasks/:id
-// @desc    Get a task
-// @access  Private
-router.get('/:id', auth, getTask);
+// Get a specific task
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const Task = require('../models/Task');
+    const task = await Task.findById(req.params.id);
+    
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    res.json(task);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
-// @route   PATCH /api/tasks/:id
-// @desc    Update a task
-// @access  Private
-router.patch('/:id', auth, updateTask);
-
-// @route   POST /api/tasks/:id/comments
-// @desc    Add a comment to a task
-// @access  Private
-router.post('/:id/comments', auth, addComment);
-
-// @route   GET /api/tasks/:id/complete
-// @desc    Complete a task via token (for email links)
-// @access  Public
-router.get('/:id/complete', completeTaskByToken);
+// Update a task
+router.patch('/:id', auth, async (req, res) => {
+  try {
+    const Task = require('../models/Task');
+    const task = await Task.findById(req.params.id);
+    
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    // Update fields
+    const updateFields = ['description', 'responsibleMemberId', 'dueDate', 'status'];
+    updateFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        task[field] = req.body[field];
+      }
+    });
+    
+    await task.save();
+    res.json(task);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;
