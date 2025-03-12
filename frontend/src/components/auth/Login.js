@@ -8,6 +8,7 @@ const Login = () => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -20,14 +21,18 @@ const Login = () => {
   const onSubmit = async e => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
-    const success = await login(formData);
+    const result = await login(formData);
     
-    if (success) {
+    if (result.success) {
+      console.log('Login successful, redirecting to dashboard');
       navigate('/dashboard');
     } else {
-      setError('Invalid email or password');
+      setError(result.error || 'Invalid email or password');
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -91,9 +96,12 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isLoading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
             >
-              Sign in
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
           
