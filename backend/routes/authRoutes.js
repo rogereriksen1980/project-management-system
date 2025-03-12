@@ -1,37 +1,129 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const auth = require('../middleware/auth');
-const { 
-  register, 
-  login, 
-  getCurrentUser, 
-  forgotPassword, 
-  resetPassword 
-} = require('../controllers/authController');
+const config = require('../config');
 
-// @route   POST /api/auth/register
-// @desc    Register user
-// @access  Public
-router.post('/register', register);
+// Register user
+router.post('/register', async (req, res) => {
+  try {
+    const Member = require('../models/Member');
+    const { name, email, password } = req.body;
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
-router.post('/login', login);
+    // Check if member already exists
+    let member = await Member.findOne({ email });
+    if (member) {
+      return res.status(400).json({ message: 'Member already exists' });
+    }
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
-router.get('/me', auth, getCurrentUser);
+    // Check if this is the first member (make them admin)
+    const memberCount = await Member.countDocuments();
+    const role = memberCount === 0 ? 'admin' : 'member';
 
-// @route   POST /api/auth/forgot-password
-// @desc    Request password reset
-// @access  Public
-router.post('/forgot-password', forgotPassword);
+    // Create new member
+    member = new Member({
+      name,
+      email,
+      password,
+      role
+    });
 
-// @route   POST /api/auth/reset-password/:token
-// @desc    Reset password with token
-// @access  Public
-router.post('/reset-password/:token', resetPassword);
+    await member.save();
+
+    // Create JWT token
+    const payload = {
+      user: {
+        id: member.id,
+        role: member.role
+      }
+    };
+
+    jwt.sign(
+      payload,
+      config.jwtSecret,
+      { expiresIn: '7d' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ 
+          token, 
+          user: { 
+            id: member.id, 
+            name: member.name, 
+            email: member.email, 
+            role: member.role 
+          } 
+        });
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Login user
+router.post('/login', async (req, res) => {
+  try {
+    const Member = require('../models/Member');
+    const { email, password } = req.body;
+
+    // Check if member exists
+    const member = await Member.findOne({ email });
+    if (!member) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, member.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Create JWT token
+    const payload = {
+      user: {
+        id: member.id,
+        role: member.role
+      }
+    };
+
+    jwt.sign(
+      payload,
+      config.jwtSecret,
+      { expiresIn: '7d' },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ 
+          token, 
+          user: { 
+            id: member.id, 
+            name: member.name, 
+            email: member.email, 
+            role: member.role 
+          } 
+        });
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get current user
+router.get('/me', auth, async (req, res) => {
+  try {
+    const Member = require('../models/Member');
+    const member = await Member.findById(req.user.id).select('-password');
+    if (!member) {
+      return res.status(404).json({ message: 'Member not found' });
+    }
+    res.json(member);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;
