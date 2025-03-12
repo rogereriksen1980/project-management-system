@@ -6,44 +6,53 @@ const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({
     token: localStorage.getItem('token'),
-    isAuthenticated: null,
+    isAuthenticated: localStorage.getItem('token') ? true : false,
     user: JSON.parse(localStorage.getItem('user')) || null,
     loading: true
   });
 
   useEffect(() => {
+    // Configure axios with the token
+    if (auth.token) {
+      api.defaults.headers.common['x-auth-token'] = auth.token;
+    } else {
+      delete api.defaults.headers.common['x-auth-token'];
+    }
+  }, [auth.token]);
+
+  useEffect(() => {
     const loadUser = async () => {
-      if (auth.token) {
-        try {
-          // Set auth token header
-          if (auth.token) {
-            api.defaults.headers.common['x-auth-token'] = auth.token;
-          }
-          
-          const res = await api.get('/api/auth/me');
-          
-          setAuth({
-            ...auth,
-            isAuthenticated: true,
-            user: res.data,
-            loading: false
-          });
-        } catch (err) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          
-          setAuth({
-            ...auth,
-            token: null,
-            isAuthenticated: false,
-            user: null,
-            loading: false
-          });
-        }
-      } else {
+      // If no token, skip loading user
+      if (!auth.token) {
         setAuth({
           ...auth,
           isAuthenticated: false,
+          loading: false
+        });
+        return;
+      }
+
+      try {
+        console.log('Loading user with token:', auth.token);
+        const res = await api.get('/api/auth/me');
+        console.log('User loaded successfully:', res.data);
+        
+        setAuth({
+          ...auth,
+          isAuthenticated: true,
+          user: res.data,
+          loading: false
+        });
+      } catch (err) {
+        console.error('Error loading user:', err);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        setAuth({
+          ...auth,
+          token: null,
+          isAuthenticated: false,
+          user: null,
           loading: false
         });
       }
@@ -57,9 +66,13 @@ const AuthProvider = ({ children }) => {
   const login = async (formData) => {
     try {
       const res = await api.post('/api/auth/login', formData);
+      console.log('Login successful:', res.data);
       
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      
+      // Set auth header for next requests
+      api.defaults.headers.common['x-auth-token'] = res.data.token;
       
       setAuth({
         ...auth,
@@ -69,9 +82,13 @@ const AuthProvider = ({ children }) => {
         loading: false
       });
       
-      return true;
+      return { success: true };
     } catch (err) {
-      return false;
+      console.error('Login failed:', err.response?.data || err.message);
+      return { 
+        success: false, 
+        error: err.response?.data?.message || 'Login failed'
+      };
     }
   };
 
@@ -79,9 +96,13 @@ const AuthProvider = ({ children }) => {
   const register = async (formData) => {
     try {
       const res = await api.post('/api/auth/register', formData);
+      console.log('Registration successful:', res.data);
       
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      
+      // Set auth header for next requests
+      api.defaults.headers.common['x-auth-token'] = res.data.token;
       
       setAuth({
         ...auth,
@@ -91,16 +112,22 @@ const AuthProvider = ({ children }) => {
         loading: false
       });
       
-      return true;
+      return { success: true };
     } catch (err) {
-      return false;
+      console.error('Registration failed:', err.response?.data || err.message);
+      return { 
+        success: false, 
+        error: err.response?.data?.message || 'Registration failed'
+      };
     }
   };
 
   // Logout
   const logout = () => {
+    console.log('Logging out user');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    delete api.defaults.headers.common['x-auth-token'];
     
     setAuth({
       ...auth,
